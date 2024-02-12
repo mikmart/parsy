@@ -29,7 +29,7 @@ result_bind <- function(x, f) {
 }
 
 #' @export
-`%|%.result` <- function(x, y) {
+`|.result` <- function(x, y) {
   if (is_failure(x)) y else x
 }
 

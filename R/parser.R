@@ -69,14 +69,14 @@ parser_all <- function(...) {
 #' @rdname parser_many
 #' @export
 parser_any <- function(...) {
-  Reduce(`%|%.parser`, list(...))
+  Reduce(`|.parser`, list(...))
 }
 
 #' @rdname parser_many
 #' @export
-`%|%.parser` <- function(p, q) {
+`|.parser` <- function(p, q) {
   parser(function(x) {
-    parser_run(p, x) %|% parser_run(q, x)
+    parser_run(p, x) | parser_run(q, x)
   })
 }
 
@@ -157,7 +157,7 @@ parser_do <- function(...) {
       if (is_failure(r))
         return(r)
       x <- from_success(r)
-      n <- names(dots)[[i]]
+      n <- ...names()[[i]]
       if (!is.null(n) && nzchar(n))
         assign(n, val(x), env)
     }

@@ -36,17 +36,14 @@ This is a basic example which shows you how to solve a common problem:
 ```{r example}
 library(parsy)
 
-parse_int <- parse_digits() |> parser_map(as.integer)
+parse_number <- parse_digits() |> parser_map(as.integer)
 
 p <- parser_do(
-  x = parse_int,
+  x = parse_number,
   parse_whitespace(),
-  op = parser_any(
-    parse_string("+"),
-    parse_string("*")
-  ),
+  op = parse_string("+") | parse_string("*"),
   parse_whitespace(),
-  y = parse_int,
+  y = parse_number,
   op |> switch(
     "+" = parser_return(x + y),
     "*" = parser_return(x * y)
