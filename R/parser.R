@@ -20,10 +20,10 @@ parser_run <- function(p, x) {
     stop(sprintf("`p` must be a <parser> object, not <%s>.", class(p)[1]))
   if (!is_state(x))
     x <- state(x)
-  y <- run_unsafe(p, x)
-  if (!is_result(y))
-    stop(sprintf("Expected parser to return <result>, got <%s>.", class(y)[1]))
-  y
+  r <- run_unsafe(p, x)
+  if (!is_result(r))
+    stop(sprintf("Expected parser to return <result>, got <%s>.", class(r)[1]))
+  r
 }
 
 #' Parser Combination
@@ -99,10 +99,7 @@ parser_map <- function(p, f) {
 #' @rdname parser_map
 #' @export
 parser_call <- function(p, f) {
-  g <- \(x) do.call(f, x)
-  parser(function(x) {
-    parser_run(p, x) |> result_map(\(y) map_value(y, g))
-  })
+  parser_map(p, \(x) do.call(f, x))
 }
 
 #' Parser Sequencing
@@ -168,45 +165,7 @@ parser_do <- function(...) {
   })
 }
 
-state <- function(x, index = 1L, value = NULL, error = NULL) {
-  stopifnot(is.character(x) && length(x) == 1) #? Support other kinds of input?
-  structure(x, index = as.integer(index), value = value, error = error, class = "parser_state")
-}
-
-is_state <- function(x) inherits(x, "parser_state")
-
-ind <- function(x) attr(x, "index", exact = TRUE)
-val <- function(x) attr(x, "value", exact = TRUE)
-err <- function(x) attr(x, "error", exact = TRUE)
-
-set_value <- function(x, value) structure(x, value = value)
-set_error <- function(x, error) structure(x, error = error)
-
-map_value <- function(x, f) set_value(x, value = f(val(x)))
-
-consume <- function(x, n) {
-  #? What if input is not a string but e.g. binary or tokens?
-  if (!is.integer(n))
-    n <- as.integer(n)
-  if (length(n) == 0 || is.na(n) || n < 0L)
-    stop("`n` must be a non-negative integer.")
-  if (n == 0L)
-    return(x)
-  structure(substring(x, n + 1L), index = ind(x) + n)
-}
-
-# Format a message in the context of a parser state.
-state_format <- function(x, message, ...) {
-  sprintf(paste(message, "'%s' at index %d"), ..., toString(x, 20), ind(x))
-}
-
 # TODO: Proper print methods.
-
-#' @export
-print.parser_state <- function(x, ...) {
-  str(x)
-  x
-}
 
 #' @export
 print.parser <- function(x, ...) {
