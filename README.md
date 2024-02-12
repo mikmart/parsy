@@ -16,7 +16,7 @@ parsy implements functional-inspired monadic parser combinators in R.
 You can install the development version of parsy like so:
 
 ``` r
-# FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
+pak::pkg_install("mikmart/parsy")
 ```
 
 ## Example
@@ -26,20 +26,20 @@ This is a basic example which shows you how to solve a common problem:
 ``` r
 library(parsy)
 
+parse_int <- parse_digits() |> parser_map(as.integer)
+
 p <- parser_do(
-  x = parse_digits() |>
-    parser_map(as.integer),
+  x = parse_int,
   parse_whitespace(),
   op = parser_any(
     parse_string("+"),
-    parse_string("-")
+    parse_string("*")
   ),
   parse_whitespace(),
-  y = parse_digits() |>
-    parser_map(as.integer),
+  y = parse_int,
   op |> switch(
     "+" = parser_return(x + y),
-    "-" = parser_return(x - y)
+    "*" = parser_return(x * y)
   )
 )
 
@@ -48,17 +48,11 @@ parser_run(p, "1 + 1")
 #>  'parser_state' chr ""
 #>  - attr(*, "index")= int 6
 #>  - attr(*, "value")= int 2
-parser_run(p, "2 - 1")
+parser_run(p, "7 * 6")
 #> ✔ Success
 #>  'parser_state' chr ""
 #>  - attr(*, "index")= int 6
-#>  - attr(*, "value")= int 1
-parser_run(p, "1 + foo")
-#> ✖ Failure
-#>  'parser_state' chr "foo"
-#>  - attr(*, "index")= int 5
-#>  - attr(*, "value")= chr " "
-#>  - attr(*, "error")= chr "expected some digits got 'foo' at index 5"
+#>  - attr(*, "value")= int 42
 ```
 
 ## Inspiration
