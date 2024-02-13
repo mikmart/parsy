@@ -69,14 +69,14 @@ parser_all <- function(...) {
 #' @rdname parser_many
 #' @export
 parser_any <- function(...) {
-  Reduce(`|.parser`, list(...))
+  Reduce(`%|%.parser`, list(...))
 }
 
 #' @rdname parser_many
 #' @export
-`|.parser` <- function(p, q) {
+`%|%.parser` <- function(p, q) {
   parser(function(x) {
-    parser_run(p, x) | parser_run(q, x)
+    parser_run(p, x) %|% parser_run(q, x)
   })
 }
 

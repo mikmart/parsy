@@ -4,7 +4,7 @@
 \alias{parser_many}
 \alias{parser_all}
 \alias{parser_any}
-\alias{|.parser}
+\alias{\%|\%.parser}
 \title{Parser Combination}
 \usage{
 parser_many(p)
@@ -13,7 +13,7 @@ parser_all(...)
 
 parser_any(...)
 
-\method{|}{parser}(p, q)
+\method{\%|\%}{parser}(p, q)
 }
 \arguments{
 \item{p, q, ...}{Parser objects.}
