@@ -41,7 +41,7 @@ parse_number <- parse_digits() |> parser_map(as.integer)
 p <- parser_do(
   x = parse_number,
   parse_whitespace(),
-  op = parse_string("+") | parse_string("*"),
+  op = parse_string("+") %|% parse_string("*"),
   parse_whitespace(),
   y = parse_number,
   op |> switch(
