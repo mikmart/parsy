@@ -82,6 +82,8 @@ to acknowledge the interpreted and vector-based nature of R. Rather than writing
 out the combinations requiring several single-character parsers, it becomes
 practical to reach out for regular expressions with `parse_regexp()`.
 
+<!-- TODO: Just 0 -->
+
 To parse an integer we match at the start of input (`^`) an optional minus sign
 (`-?`) followed by a non-zero digit (`[1-9]`) and 0 or more digits (`[0-9]*`).
 We also delegate the interpretation of the minus sign and the conversion of
@@ -100,6 +102,8 @@ leading zeroes:
 ```{r}
 parse_integer |> parser_run("042")
 ```
+
+<!-- TODO: 0.1 -->
 
 Extending the regular expression to allow for an optional decimal separator `.`
 followed by some digits is straightforward. As JSON does not distinguish between
