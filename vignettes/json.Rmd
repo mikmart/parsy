@@ -1,0 +1,119 @@
+---
+title: "Case Study: Parsing JSON"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{json}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+_WIP: At this point this vignette is only a rough draft._
+
+```{r setup}
+library(parsy)
+```
+
+## JSON Null
+
+Parsing a JSON null value is just parsing the literal string `null`. Since we
+are not building the parser from character parsers, there's little to do but
+parse the string with our fundamental parser `parse_string()` and transform the
+result into a `NULL` with `parser_map()`.
+
+```{r}
+parse_json_null <- parse_string("null") |> parser_map(\(.) NULL)
+parse_json_null |> parser_run("null")
+```
+
+An interesting side-effect of the way parser state in {parsy} is implemented via
+attributes is that an R `NULL` value shows up as a lack of the `value` attribute
+on a successful parse result.
+
+## JSON Boolean
+
+Parsing a boolean is slightly more complex as it requires making a choice. A
+boolean in JSON is either `true` or `false`. We use the alternative parser
+combinator `%|%` to check both values with their own string parsers. The resulting
+parser can have as a result value either the string `"true"` or `"false"` which
+we `switch()` on to return the corresponding logical value in R.
+
+```{r}
+parse_json_bool <- parse_string("true") %|% parse_string("false") |>
+  parser_map(\(x) switch(x, true = TRUE, false = FALSE))
+
+parse_json_bool |> parser_run("true")
+parse_json_bool |> parser_run("false")
+```
+
+A slight tangent: The logical operator `|` is generic and it could be natural
+and convenient to implement the parser combinator `%|%` as a method for it.
+However, taking that route would have two major downsides:
+
+* `|` is an _S4 generic_ that dispatches on both arguments.
+* `|` has lower operator precedence than the base forward pipe operator `|>`.
+
+The first point means we lose the benefits of lazy evaluation; all combined
+parsers would have to be executed in order for method dispatch to resolve.
+Our `%|%` instead dispatches only on the argument on the left hand side and
+evaluates the right hand side lazily, allowing short-circuiting.
+
+The second point means that in order to pipe the combined parser we would have
+to write `(p | q) |> f()`. Custom operators like `%|%` have higher precedence
+than `|>` and result in the nicer form of `p %|% q  |> f()`.
+
+## JSON Number
+
+Moving on to numbers, things start to get a bit more complex. At its core we
+parse some digits, but we'll also need to deal with:
+
+* Leading zeroes for parsing natural numbers; JSON does not allow them.
+* The `-` symbol to extend our parser to integers.
+* The `.` decimal separator to extend to floating point values.
+
+We have the requisite tools available, but it is at this point where we have
+to acknowledge the interpreted and vector-based nature of R. Rather than writing
+out the combinations requiring several single-character parsers, it becomes
+practical to reach out for regular expressions with `parse_regexp()`.
+
+To parse an integer we match at the start of input (`^`) an optional minus sign
+(`-?`) followed by a non-zero digit (`[1-9]`) and 0 or more digits (`[0-9]*`).
+We also delegate the interpretation of the minus sign and the conversion of
+a string of digits into a base 10 number to R's `as.integer()`.
+
+```{r}
+parse_integer <- parse_regexp("^-?[1-9][0-9]*") |> parser_map(as.integer)
+
+parse_integer |> parser_run("42")
+parse_integer |> parser_run("-1")
+```
+
+We can parse integers succesfully. Let's also observe the parser failing with
+leading zeroes:
+
+```{r}
+parse_integer |> parser_run("042")
+```
+
+Extending the regular expression to allow for an optional decimal separator `.`
+followed by some digits is straightforward. As JSON does not distinguish between
+integers and doubles, we also change over to `as.double()` to always convert the
+result into a floating point value in R.
+
+``` {r}
+parse_json_number <- parse_regexp("^-?[1-9][0-9]*\\.?[0-9]*") |> parser_map(as.double)
+parse_json_number |> parser_run("19.5")
+```
+
+The extension to also parse scientific notation (e.g. `1e5`) is left as an
+exercise to the reader.
+
+## JSON String
+
+In JSON a string is a bunch of characters enclosed by double quotes.
