@@ -26,18 +26,18 @@ This is a basic example which shows you how to solve a common problem:
 ``` r
 library(parsy)
 
-# Create an evaluating parser for operations on numbers.
+# An evaluating parser for numeric operators.
 parse_eval <- parser_do(
   x = parse_number,
   parse_whitespace,
   op = parse_operator,
   parse_whitespace,
-  y = parse_number,
+  y = parse_eval,
   op |> switch(
     "+" = parser_return(x + y),
     "*" = parser_return(x * y)
   )
-)
+) %|% parse_number
 
 # Define the required sub-parsers.
 parse_number <- parse_digits() |> parser_map(as.integer)
@@ -50,10 +50,10 @@ parse_eval |> parser_run("1 + 1")
 #>  'parser_state' chr ""
 #>  - attr(*, "index")= int 6
 #>  - attr(*, "value")= int 2
-parse_eval |> parser_run("7 * 6")
+parse_eval |> parser_run("2 + 5 * 8")
 #> ✔ Success
 #>  'parser_state' chr ""
-#>  - attr(*, "index")= int 6
+#>  - attr(*, "index")= int 10
 #>  - attr(*, "value")= int 42
 ```
 
