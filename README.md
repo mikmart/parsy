@@ -26,13 +26,11 @@ This is a basic example which shows you how to solve a common problem:
 ``` r
 library(parsy)
 
-parse_number <- parse_digits() |> parser_map(as.integer)
-parse_whitespace <- parse_regexp("^[[:space:]]*")
-
-p <- parser_do(
+# Create an evaluating parser for operations on numbers.
+parse_eval <- parser_do(
   x = parse_number,
   parse_whitespace,
-  op = parse_string("+") %|% parse_string("*"),
+  op = parse_operator,
   parse_whitespace,
   y = parse_number,
   op |> switch(
@@ -41,12 +39,18 @@ p <- parser_do(
   )
 )
 
-parser_run(p, "1 + 1")
+# Define the required sub-parsers.
+parse_number <- parse_digits() |> parser_map(as.integer)
+parse_whitespace <- parse_regexp("^[[:space:]]*")
+parse_operator <- parse_string("+") %|% parse_string("*")
+
+# Run the parser on some inputs.
+parse_eval |> parser_run("1 + 1")
 #> ✔ Success
 #>  'parser_state' chr ""
 #>  - attr(*, "index")= int 6
 #>  - attr(*, "value")= int 2
-parser_run(p, "7 * 6")
+parse_eval |> parser_run("7 * 6")
 #> ✔ Success
 #>  'parser_state' chr ""
 #>  - attr(*, "index")= int 6
