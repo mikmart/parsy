@@ -2,14 +2,11 @@
 % Please edit documentation in R/parser.R
 \name{parser_many}
 \alias{parser_many}
-\alias{parser_all}
 \alias{parser_any}
 \alias{\%|\%.parser}
 \title{Parser Combination}
 \usage{
 parser_many(p)
-
-parser_all(...)
 
 parser_any(...)
 

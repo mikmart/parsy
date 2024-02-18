@@ -51,23 +51,6 @@ push <- function(l, x) c(l, list(x))
 
 #' @rdname parser_many
 #' @export
-parser_all <- function(...) {
-  parser(function(x) {
-    values <- list()
-    for (p in list(...)) {
-      r <- parser_run(p, x)
-      if (is_failure(r))
-        return(r)
-      x <- from_success(r)
-      values <- push(values, val(x))
-    }
-    values <- setNames(values, ...names())
-    success(set_value(x, values))
-  })
-}
-
-#' @rdname parser_many
-#' @export
 parser_any <- function(...) {
   Reduce(`%|%.parser`, list(...))
 }
@@ -104,8 +87,26 @@ parser_call <- function(p, f) {
 
 #' Parser Sequencing
 #'
-#' `parser_return()` creates a parser that will resolve to the specified `value`
-#'  without consuming any input.
+#' Chaining parsers creates a new parser that runs all chained parsers, passing
+#' the sequentially modified input between them. If any parser fails, evaluation
+#' short-circuits to return the failure.
+#'
+#' The functions documented here chain parsers as follows:
+#'
+#' - `parser_bind()` chains parser `p` and the parser returned by `f`.
+#' - `%*>%` chains parsers `p` and `q` to return the result of `q`.
+#' - `%<*%` chains parsers `p` and `q` to return the result of `p`.
+#' - `parser_all()` chains parsers in `...` to return the values of all in
+#'    a list. Optionally, argument names can be used to name the returned list.
+#' - `parser_do()` chains parsers in `...` to return the result of the last.
+#'    Optionally, argument names can be used to bind the parsed value in the
+#'    evaluation environment of subsequent arguments.
+#'
+#' Constant parsers are useful for creating the final parser of a chain based
+#' on the values of earlier parsers:
+#'
+#' - `parser_return()` creates a parser that succeeds with `value` without consuming any input.
+#' - `parser_fail()` creates a parser that fails with `error` without consuming any input.
 #'
 #' @param p,q Parser objects.
 #' @param f A function that takes the value parsed by `p` and returns a new parser.
@@ -121,25 +122,27 @@ parser_bind <- function(p, f) {
 
 #' @rdname parser_bind
 #' @export
-parser_then <- function(p, q) {
-  parser_bind(p, \(x) q)
-}
+`%*>%` <- function(p, q) parser_do(p, x = q, parser_return(x))
 
 #' @rdname parser_bind
-#' @param value The parse value that the new parser resolves to.
 #' @export
-parser_return <- function(value) {
-  parser(function(x) {
-    success(set_value(x, value))
-  })
-}
+`%<*%` <- function(p, q) parser_do(x = p, q, parser_return(x))
 
 #' @rdname parser_bind
-#' @param error The parse error that the new parser resolves to.
+#' @param ... Parser objects.
 #' @export
-parser_fail <- function(error) {
+parser_all <- function(...) {
   parser(function(x) {
-    failure(set_error(x, error))
+    values <- list()
+    for (p in list(...)) {
+      r <- parser_run(p, x)
+      if (is_failure(r))
+        return(r)
+      x <- from_success(r)
+      values <- push(values, val(x))
+    }
+    values <- setNames(values, ...names())
+    success(set_value(x, values))
   })
 }
 
@@ -162,6 +165,24 @@ parser_do <- function(...) {
         assign(n, val(x), env)
     }
     r
+  })
+}
+
+#' @rdname parser_bind
+#' @param value The value for the parser to succeed with.
+#' @export
+parser_return <- function(value) {
+  parser(function(x) {
+    success(set_value(x, value))
+  })
+}
+
+#' @rdname parser_bind
+#' @param error The error for the parser to fail with.
+#' @export
+parser_fail <- function(error) {
+  parser(function(x) {
+    failure(set_error(x, error))
   })
 }
 

@@ -2,37 +2,64 @@
 % Please edit documentation in R/parser.R
 \name{parser_bind}
 \alias{parser_bind}
-\alias{parser_then}
+\alias{\%*>\%}
+\alias{\%<*\%}
+\alias{parser_all}
+\alias{parser_do}
 \alias{parser_return}
 \alias{parser_fail}
-\alias{parser_do}
 \title{Parser Sequencing}
 \usage{
 parser_bind(p, f)
 
-parser_then(p, q)
+p \%*>\% q
+
+p \%<*\% q
+
+parser_all(...)
+
+parser_do(...)
 
 parser_return(value)
 
 parser_fail(error)
-
-parser_do(...)
 }
 \arguments{
 \item{p, q}{Parser objects.}
 
 \item{f}{A function that takes the value parsed by \code{p} and returns a new parser.}
 
-\item{value}{The parse value that the new parser resolves to.}
-
-\item{error}{The parse error that the new parser resolves to.}
-
 \item{...}{Parser objects.}
+
+\item{value}{The value for the parser to succeed with.}
+
+\item{error}{The error for the parser to fail with.}
 }
 \value{
 A new parser object.
 }
 \description{
-\code{parser_return()} creates a parser that will resolve to the specified \code{value}
-without consuming any input.
+Chaining parsers creates a new parser that runs all chained parsers, passing
+the sequentially modified input between them. If any parser fails, evaluation
+short-circuits to return the failure.
+}
+\details{
+The functions documented here chain parsers as follows:
+\itemize{
+\item \code{parser_bind()} chains parser \code{p} and the parser returned by \code{f}.
+\item \verb{\%*>\%} chains parsers \code{p} and \code{q} to return the result of \code{q}.
+\item \verb{\%<*\%} chains parsers \code{p} and \code{q} to return the result of \code{p}.
+\item \code{parser_all()} chains parsers in \code{...} to return the values of all in
+a list. Optionally, argument names can be used to name the returned list.
+\item \code{parser_do()} chains parsers in \code{...} to return the result of the last.
+Optionally, argument names can be used to bind the parsed value in the
+evaluation environment of subsequent arguments.
+}
+
+Constant parsers are useful for creating the final parser of a chain based
+on the values of earlier parsers:
+\itemize{
+\item \code{parser_return()} creates a parser that succeeds with \code{value} without consuming any input.
+\item \code{parser_fail()} creates a parser that fails with \code{error} without consuming any input.
+}
 }
