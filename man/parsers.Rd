@@ -6,7 +6,6 @@
 \alias{parse_regexp}
 \alias{parse_digits}
 \alias{parse_letters}
-\alias{parse_whitespace}
 \title{Basic Parsers}
 \usage{
 parse_string(string)
@@ -16,8 +15,6 @@ parse_regexp(pattern)
 parse_digits()
 
 parse_letters()
-
-parse_whitespace()
 }
 \arguments{
 \item{string}{A sequence of characters to match.}

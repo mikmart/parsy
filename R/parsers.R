@@ -52,13 +52,3 @@ parse_letters <- function() {
     })
   })
 }
-
-#' @rdname parsers
-#' @export
-parse_whitespace <- function() {
-  parser(function(x) {
-    parse_regexp("^[[:space:]]*") |> parser_run(x) |> failure_map(\(y) {
-      set_error(y, state_format(y, "expected whitespace got"))
-    })
-  })
-}

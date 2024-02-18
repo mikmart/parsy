@@ -37,12 +37,13 @@ This is a basic example which shows you how to solve a common problem:
 library(parsy)
 
 parse_number <- parse_digits() |> parser_map(as.integer)
+parse_whitespace <- parse_regexp("^[[:space:]]*")
 
 p <- parser_do(
   x = parse_number,
-  parse_whitespace(),
+  parse_whitespace,
   op = parse_string("+") %|% parse_string("*"),
-  parse_whitespace(),
+  parse_whitespace,
   y = parse_number,
   op |> switch(
     "+" = parser_return(x + y),
